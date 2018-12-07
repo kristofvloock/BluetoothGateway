@@ -47,12 +47,14 @@ public class Main2Activity extends AppCompatActivity {
     String address = null;
     private ProgressDialog progress;
     BluetoothAdapter myBluetooth = null;
-    BluetoothSocket btSocket = null;
+    public BluetoothSocket btSocket = null;
     private boolean isBtConnected = false;
     //SPP UUID. Look for it
     static final UUID myUUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
     byte[] buffer;
     int bytes;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -72,6 +74,7 @@ public class Main2Activity extends AppCompatActivity {
         textview = (TextView)findViewById(R.id.textView2);
 
         new ConnectBT().execute(); //Call the class to connect
+        new updater().execute();
 
         //commands to be sent to bluetooth
         On.setOnClickListener(new View.OnClickListener()
@@ -100,29 +103,94 @@ public class Main2Activity extends AppCompatActivity {
             }
         });
 
-        new Thread( new Runnable(){
+        Thread mThread = new Thread( new Runnable(){
         @Override
-        public void run(){
+        public void run() {
+            try {
             Looper.prepare();
-            while (true) {
-                try {
-                    TimeUnit.SECONDS.sleep(15);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+//            while (true) {
+//                try {
+//                    TimeUnit.SECONDS.sleep(15);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                String gps = getGPS();
+//                String secret = getSecret();
+//
+//                requestContract(secret, gps);
+//                Log.d("...---...", "GPS: " + gps + " Secret: " + secret);
+
+//                try {
+//                    TimeUnit.SECONDS.sleep(1);
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//                Log.d("############", btSocket.toString());
+//                if (btSocket != null) {
+//                    try {
+//                        InputStream input = btSocket.getInputStream();
+//                        DataInputStream dinput = new DataInputStream(input);
+//                        while (dinput.available() == 0) {
+//                            TimeUnit.SECONDS.sleep(1);
+//                        }
+//                        TimeUnit.SECONDS.sleep(1);
+//                        buffer = new byte[dinput.available()];
+//                        dinput.read(buffer);
+//                    } catch (IOException e) {
+//                        msg("Error");
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    } catch (NullPointerException e) {
+//                        e.printStackTrace();
+//
+//                    }
+//                }
+//
+//                Log.d("cw2b2", new String(buffer));
+
+                Log.d("cw2b2", getGPS());
+
+
+//            }
+        } catch (NullPointerException e) {
+                e.printStackTrace();
+            }
+            }
+
+        });
+
+//        Log.d("CW2B2", "Launching Thread !!");
+//        mThread.start();
+//        Log.d("CW2B2", "Lift-off!");
+    }
+
+    public String listen() {
+        if (btSocket != null) {
+                    try {
+                        InputStream input = btSocket.getInputStream();
+                        DataInputStream dinput = new DataInputStream(input);
+                        while (dinput.available() == 0) {
+                            TimeUnit.SECONDS.sleep(1);
+                        }
+                        TimeUnit.SECONDS.sleep(1);
+                        buffer = new byte[dinput.available()];
+                        dinput.read(buffer);
+                    } catch (IOException e) {
+                        msg("Error");
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (NullPointerException e) {
+                        Log.d("CW2B2", "EZQVGF>DWSQZE");
+                        e.printStackTrace();
+
+                    }
                 }
-                String gps = getGPS();
-                String secret = getSecret();
 
-                requestContract(secret, gps);
-                Log.d("...---...", "GPS: " + gps + " Secret: " + secret);
-            }
-            }
-        }).start();
-
+                return new String(buffer);
     }
 
 
-    private void requestContract(final String secret, final String gps) {
+    private void requestContract(final String secret, final String lat, final String lng, final String timestamp) {
 
         String url = "https://andreasp.ulyssis.be/auth/bikeMessage/2/";
         RequestQueue queue = Volley.newRequestQueue(this);
@@ -153,7 +221,9 @@ public class Main2Activity extends AppCompatActivity {
             protected Map<String, String > getParams() {
                 Map<String, String> params = new HashMap<>();
                 params.put("secret", secret);
-                params.put("gpgga", gps);
+                params.put("last_longitude", lng);
+                params.put("last_laltitude", lat);
+                params.put("timestamp", timestamp);
                 return params;
             }
 
@@ -183,7 +253,7 @@ public class Main2Activity extends AppCompatActivity {
         {
             try
             {
-                btSocket.getOutputStream().write("1".getBytes());
+//                btSocket.getOutputStream().write("1".getBytes());
 
 
 
@@ -290,6 +360,45 @@ public class Main2Activity extends AppCompatActivity {
             progress.dismiss();
         }
     }
+
+    public class updater extends AsyncTask<Void,Void,Void>{
+    @Override
+    protected Void doInBackground(Void... arg0){
+        while(true){
+              try {
+//                  if (btSocket != null) {
+//                    try {
+//                        InputStream input = btSocket.getInputStream();
+//                        DataInputStream dinput = new DataInputStream(input);
+////                        while (dinput.available() == 0) {
+////                            TimeUnit.SECONDS.sleep(1);
+////                        }
+//                        TimeUnit.SECONDS.sleep(1);
+//                        buffer = new byte[dinput.available()];
+//                        dinput.read(buffer);
+//                    } catch (IOException e) {
+//                        msg("Error");
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    } catch (NullPointerException e) {
+//                        e.printStackTrace();
+//
+//                    }
+//                }
+
+
+//                Log.d("CW2B2", new String(buffer));
+//                  Log.d("CW2B2", getGPS());
+                  String[] data = getGPS().split(";");
+                  requestContract(data[2], data[0], data[1], data[3]);
+              }
+             catch (Exception e) {
+
+                 e.printStackTrace();
+            }
+        }
+    }
+}
 }
 
 
